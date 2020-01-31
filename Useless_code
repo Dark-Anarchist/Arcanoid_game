@@ -1,0 +1,117 @@
+import pygame
+import sys
+
+
+pygame.init()
+win = pygame.display.set_mode((450, 400))
+WIDTH = 80
+HEIGHT = 8
+speed = 20
+black = (0, 0, 0)
+# Объявление констант длины, высоты и скорости, создание экрана
+# Adding constant width, height and speed, creating screen.
+
+
+class Game:
+
+    def __init__(self, x, y, n, m, r, dn, dm):
+        self.x = x
+        self.y = y
+        self.n = n
+        self.m = m
+        self.r = r
+        self.dn = dn
+        self.dm = dm
+
+    def draw_rect(self):
+        pygame.draw.rect(win, (0, 0, 255), (self.x, self.y, WIDTH, HEIGHT))
+        pygame.display.update()
+# Создание прямоугольника заданного координатами, длиной и высотой
+# Creating rectangle with current coordinates, width and height
+
+    def draw_ball(self):
+        win.fill((255, 255, 255))
+        pygame.draw.circle(win, (255, 0, 0), (self.n, self.m), self.r)
+        pygame.display.update()
+# Заливка экрана белым, создание шарика по заданным координатам и радиусу
+# Filling the screen with white color, creating ball with current coordinates
+
+    def press_keyboard(self, x):
+        game_over = False
+# В этом методе будет описано движение объектов
+# In this method creating object movement
+        while True:
+            pygame.time.delay(45)
+            self.draw_ball()
+            self.draw_rect()
+            if game_over is False:
+                self.n = self.n + self.dn
+                self.m = self.m + self.dm
+            if self.n + self.r >= 450 or self.n - self.r <= 0:
+                self.dn = -self.dn
+            if self.m - self.r <= 0:
+                self.dm = -self.dm
+# Движение шарика засчёт изменения координат. Отражение от стенок
+# Ball movement using coordinates changing. Reflection from walls
+            if pygame.Rect(self.x, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
+                                                                           self.m + self.r):
+                self.dn = -7
+                self.dm = -self.dm
+            if pygame.Rect(self.x + WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
+                                                                                       self.m + self.r):
+                self.dn = -3
+                self.dm = -self.dm
+            if pygame.Rect(self.x + 2 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
+                                                                                           self.m + self.r):
+                self.dn = 0
+                self.dm = -self.dm
+            if pygame.Rect(self.x + 3 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
+                                                                                           self.m + self.r):
+                self.dn = 3
+                self.dm = -self.dm
+            if pygame.Rect(self.x + 4 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
+                                                                                           self.m + self.r):
+                self.dn = 7
+                self.dm = -self.dm
+# Задание шарику направление полёта в зависимости от места, в котором он соприкоснётся с прямоугольником
+# Giving flying direction for a ball according to a place, where it will collide the rectangle.
+            if self.m + self.r > 400:
+                font = pygame.font.Font(None, 25)
+                text = font.render("Game Over", True, black)
+                win.blit(text, [180, 200])
+                text = font.render("Your Score:", True, black)
+                win.blit(text, [180, 240])
+                pygame.display.update()
+                game_over = True
+# Вывод текста о завершении игры и набранном счёте, после того, как шарик упал.
+# Printing text about your score and finishing game, when the ball falls on the bottom.
+            for event in pygame.event.get():
+                self.draw_rect()
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_LEFT] and game_over is False:
+                if self.x > 0:
+                    self.x -= speed
+                    self.draw_rect()
+                else:
+                    self.x += speed
+                    self.draw_rect()
+
+            if keys[pygame.K_RIGHT] and game_over is False:
+                if self.x <= 400:
+                    self.x += speed
+                    self.draw_rect()
+                else:
+                    self.x -= speed
+                    self.draw_rect()
+
+            if keys[pygame.K_ESCAPE]:
+                pygame.quit()
+                sys.exit()
+# Назначение клавиш клавиатуры для управления прямоугольником. Esc для выхода из программы.
+# Ordering buttons for rectangle movement. Esc for escape from program.
+
+
+A = Game(185, 390, 185, 30, 10, 0, -10)
+A.draw_rect()
+A.draw_ball()
+A.press_keyboard(185)
