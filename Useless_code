@@ -1,117 +1,114 @@
-import pygame
-import sys
-
-
-pygame.init()
-win = pygame.display.set_mode((450, 400))
-WIDTH = 80
-HEIGHT = 8
-speed = 20
-black = (0, 0, 0)
-# Объявление констант длины, высоты и скорости, создание экрана
-# Adding constant width, height and speed, creating screen.
+import pygame, sys
+from random import randrange
 
 
 class Game:
 
-    def __init__(self, x, y, n, m, r, dn, dm):
-        self.x = x
-        self.y = y
-        self.n = n
-        self.m = m
-        self.r = r
-        self.dn = dn
-        self.dm = dm
+    def __init__(self):
+        pygame.init()
+        self.ball_radius = 10
+        self.ball_sp = 6
+        self.ball_rect = int(self.ball_radius * 2 ** 0.5)
+        self.fps = 60
+        self.FAKE_WIDTH = 1450
+        self.WIDTH = 1200
+        self.HEIGHT = 800
+        self.win1 = pygame.display.set_mode((self.FAKE_WIDTH, self.HEIGHT))
+        pygame.display.set_caption('ARCANOID')
+        # , pygame.FULLSCREEN
+        self.clock = pygame.time.Clock()
+        self.img = pygame.image.load('background2.jpg').convert()
+        self.img2 = pygame.image.load('1.jpg').convert()
+        self.f1 = pygame.font.Font(None, 36)
+        self.score_font = pygame.font.SysFont('Calibri', 36)
+        self.score_1 = 0
+        self.score = self.score_font.render(str(self.score_1), True, pygame.Color('green'))
+        self.text1 = self.f1.render('Your score: ' + '0', 1, pygame.Color('green'))
+        self.dx = 1
+        self.dy = -1
+        self.ball = pygame.Rect(randrange(self.ball_rect, self.WIDTH - self.ball_rect), int(self.HEIGHT // 1.5),
+                                self.ball_rect, self.ball_rect)
+        self.hit_rect = None
+        self.hit_color = None
+        self.block_list = [pygame.Rect(40 + 90 * i, 15 + 35 * j, 75, 30) for i in range(12) for j in range(10)]
+        self.color_list = [(randrange(50, 256), randrange(50, 256), randrange(50, 256)) for i in range(12) for j in
+                           range(10)]
+        self.delta_x = None
+        self.delta_y = None
+        self.hit_index = None
+        self.message = None
+        self.platform()
 
-    def draw_rect(self):
-        pygame.draw.rect(win, (0, 0, 255), (self.x, self.y, WIDTH, HEIGHT))
-        pygame.display.update()
-# Создание прямоугольника заданного координатами, длиной и высотой
-# Creating rectangle with current coordinates, width and height
+    def detect_collision(self):
+        if self.dx > 0:
+            self.delta_x = self.rect.right - self.ball.left
+        else:
+            self.delta_x = self.ball.right - self.rect.left
+        if self.dy > 0:
+            self.delta_y = self.rect.bottom - self.ball.top
+        else:
+            self.delta_y = self.ball.bottom - self.rect.top
+        if abs(self.delta_y - self.delta_x) < 10:
+            self.dx, self.dy = - self.dx, - self.dy
+        elif self.delta_x > self.delta_y:
+            self.dy = - self.dy
+        elif self.delta_y > self.delta_x:
+            self.dx = - self.dx
+        return self.dx, self.dy
 
-    def draw_ball(self):
-        win.fill((255, 255, 255))
-        pygame.draw.circle(win, (255, 0, 0), (self.n, self.m), self.r)
-        pygame.display.update()
-# Заливка экрана белым, создание шарика по заданным координатам и радиусу
-# Filling the screen with white color, creating ball with current coordinates
+    def platform(self):
+        self.paddle_w = 150
+        self.paddle_h = 30
+        self.paddle_sp = 15
+        self.paddle = pygame.Rect(self.WIDTH // 2 - self.paddle_w // 2, self.HEIGHT - self.paddle_h - 10,
+                                  self.paddle_w, self.paddle_h)
+        self.rect = pygame.draw.rect(self.win1, pygame.Color('yellow'), self.paddle)
 
-    def press_keyboard(self, x):
-        game_over = False
-# В этом методе будет описано движение объектов
-# In this method creating object movement
+    def collecting_score(self):
+        self.text1 = self.f1.render(f'Your score: {self.score_1}', 1, pygame.Color('green'))
+
+    def press_keyboard(self):
         while True:
-            pygame.time.delay(45)
-            self.draw_ball()
-            self.draw_rect()
-            if game_over is False:
-                self.n = self.n + self.dn
-                self.m = self.m + self.dm
-            if self.n + self.r >= 450 or self.n - self.r <= 0:
-                self.dn = -self.dn
-            if self.m - self.r <= 0:
-                self.dm = -self.dm
-# Движение шарика засчёт изменения координат. Отражение от стенок
-# Ball movement using coordinates changing. Reflection from walls
-            if pygame.Rect(self.x, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
-                                                                           self.m + self.r):
-                self.dn = -7
-                self.dm = -self.dm
-            if pygame.Rect(self.x + WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
-                                                                                       self.m + self.r):
-                self.dn = -3
-                self.dm = -self.dm
-            if pygame.Rect(self.x + 2 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
-                                                                                           self.m + self.r):
-                self.dn = 0
-                self.dm = -self.dm
-            if pygame.Rect(self.x + 3 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
-                                                                                           self.m + self.r):
-                self.dn = 3
-                self.dm = -self.dm
-            if pygame.Rect(self.x + 4 * WIDTH / 5, self.y, WIDTH / 5, HEIGHT).collidepoint(self.n + self.r,
-                                                                                           self.m + self.r):
-                self.dn = 7
-                self.dm = -self.dm
-# Задание шарику направление полёта в зависимости от места, в котором он соприкоснётся с прямоугольником
-# Giving flying direction for a ball according to a place, where it will collide the rectangle.
-            if self.m + self.r > 400:
-                font = pygame.font.Font(None, 25)
-                text = font.render("Game Over", True, black)
-                win.blit(text, [180, 200])
-                text = font.render("Your Score:", True, black)
-                win.blit(text, [180, 240])
-                pygame.display.update()
-                game_over = True
-# Вывод текста о завершении игры и набранном счёте, после того, как шарик упал.
-# Printing text about your score and finishing game, when the ball falls on the bottom.
             for event in pygame.event.get():
-                self.draw_rect()
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        exit()
+            self.win1.blit(self.img, (0, 0))
+            self.win1.blit(self.img2, (1203, 0))
+            self.win1.blit(self.text1, (1210, 10))
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT] and game_over is False:
-                if self.x > 0:
-                    self.x -= speed
-                    self.draw_rect()
-                else:
-                    self.x += speed
-                    self.draw_rect()
+            if keys[pygame.K_LEFT] and self.paddle.left > 0:
+                self.paddle.left -= self.paddle_sp
+            if keys[pygame.K_RIGHT] and self.paddle.right < self.WIDTH:
+                self.paddle.right += self.paddle_sp
 
-            if keys[pygame.K_RIGHT] and game_over is False:
-                if self.x <= 400:
-                    self.x += speed
-                    self.draw_rect()
-                else:
-                    self.x -= speed
-                    self.draw_rect()
+            [pygame.draw.rect(self.win1, self.color_list[color], block) for color, block in enumerate(self.block_list)]
+            pygame.draw.rect(self.win1, pygame.Color('yellow'), self.paddle)
+            pygame.draw.circle(self.win1, pygame.Color('red'), self.ball.center, self.ball_radius)
+            self.ball.x += self.ball_sp * self.dx
+            self.ball.y += self.ball_sp * self.dy
+            if self.ball.centerx < self.ball_radius or self.ball.centerx > self.WIDTH - self.ball_radius:
+                self.dx = - self.dx
+            if self.ball.centery < self.ball_radius:
+                self.dy = - self.dy
+            if self.ball.colliderect(self.paddle) and self.dy > 0:
+                self.dx, self.dy = self.dx, - self.dy
+            self.hit_index = self.ball.collidelist(self.block_list)
+            if self.hit_index != -1:
+                self.hit_rect = self.block_list.pop(self.hit_index)
+                self.hit_color = self.color_list.pop(self.hit_index)
+                self.dx, self.dy = self.detect_collision()
+                self.score_1 += 1
+                self.collecting_score()
+            if self.ball.bottom > self.HEIGHT:
+                exit()
+            elif not len(self.block_list):
+                print("YOU WIN!")
+                exit()
+            pygame.display.flip()
+            self.clock.tick(self.fps)
 
-            if keys[pygame.K_ESCAPE]:
-                pygame.quit()
-                sys.exit()
-# Назначение клавиш клавиатуры для управления прямоугольником. Esc для выхода из программы.
-# Ordering buttons for rectangle movement. Esc for escape from program.
 
-
-A = Game(185, 390, 185, 30, 10, 0, -10)
-A.draw_rect()
-A.draw_ball()
-A.press_keyboard(185)
+A = Game()
+A.press_keyboard()
+A.detect_collision()
